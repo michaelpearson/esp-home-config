@@ -1,0 +1,47 @@
+packages:
+  tuya: !include
+    file: common/tuya-4-gang.yaml
+    vars:
+      device_name: kitchen-lights
+      channel_1_id: lights_1
+      channel_2_id: lights_2
+      channel_3_id: lights_3
+      channel_4_id: hallway_virtual_switch
+
+light:
+  - platform: binary
+    id: lights_1
+    name: Living room lights
+    output: lights_1_output
+
+  - platform: binary
+    id: lights_2
+    name: Kitchen downlights
+    output: lights_2_output
+
+  - platform: binary
+    id: lights_3
+    name: Kitchen pendant lights
+    output: lights_3_output
+
+  - platform: binary
+    id: hallway_virtual_switch
+    disabled_by_default: true
+    name: Kitchen hallway virtual switch
+    output: hallway_virtual_switch_output
+
+binary_sensor:
+  - id: !extend lights_1_sensor
+    on_press:
+      - light.toggle: lights_1
+
+  - id: !extend lights_2_sensor
+    on_press:
+      - light.toggle: lights_2
+
+  - id: !extend lights_3_sensor
+    on_press:
+      - light.toggle: lights_3
+
+  - id: !extend hallway_virtual_switch_sensor
+    name: Kitchen hallway virtual switch

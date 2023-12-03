@@ -1,0 +1,39 @@
+udp:
+  id: udp_dimmer
+  host: media-room-dimmer
+  port: 20000
+
+packages:
+  tuya: !include
+    file: common/tuya-1-gang.yaml
+    vars:
+      device_name: media-lights
+      channel_1_id: lights_1
+
+light:
+  - platform: monochromatic
+    id: lights_1
+    name: Media room lights
+    output: udp_dimmer_output
+    gamma_correct: 1.8
+
+output:
+  - platform: udp_output
+    id: udp_dimmer_output
+    udp: udp_dimmer
+    channels: [ 0, 1, 2, 3 ]
+    passthrough: lights_1_output
+
+binary_sensor:
+  - id: !extend lights_1_sensor
+    name: Media room push button
+    on_press:
+      if:
+        condition:
+          light.is_on: lights_1
+        then:
+          light.turn_off: lights_1
+        else:
+          light.turn_on: 
+            id: lights_1
+            brightness: 50%

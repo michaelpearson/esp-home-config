@@ -1,0 +1,17 @@
+packages:
+  tuya: !include
+    file: common/tuya-1-gang.yaml
+    vars:
+      device_name: hallway-lights
+      channel_1_id: lights_1
+
+light:
+  - platform: binary
+    id: lights_1
+    name: Hallway lights
+    output: lights_1_output
+
+binary_sensor:
+  - id: !extend lights_1_sensor
+    on_press:
+      - light.toggle: lights_1

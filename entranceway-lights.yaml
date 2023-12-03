@@ -1,0 +1,37 @@
+packages:
+  tuya: !include
+    file: common/tuya-3-gang.yaml
+    vars:
+      device_name: entranceway-lights
+      channel_1_id: lights_1
+      channel_2_id: lights_2
+      channel_3_id: lights_3
+
+light:
+  - platform: binary
+    id: lights_1
+    name: Entranceway lights
+    output: lights_1_output
+
+  - platform: binary
+    id: lights_2
+    name: Porch lights
+    output: lights_2_output
+
+  - platform: binary
+    id: lights_3
+    name: Outdoor lights
+    output: lights_3_output
+
+binary_sensor:
+  - id: !extend lights_1_sensor
+    on_press:
+      - light.toggle: lights_1
+
+  - id: !extend lights_2_sensor
+    on_press:
+      - light.toggle: lights_2
+
+  - id: !extend lights_3_sensor
+    on_press:
+      - light.toggle: lights_3

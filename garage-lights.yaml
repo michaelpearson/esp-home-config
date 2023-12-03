@@ -1,0 +1,37 @@
+packages:
+  tuya: !include
+    file: common/tuya-3-gang.yaml
+    vars:
+      device_name: garage-lights
+      channel_1_id: lights_1
+      channel_2_id: lights_2
+      channel_3_id: lights_3
+
+light:
+  - platform: binary
+    id: lights_1
+    name: Garage lights
+    output: lights_1_output
+
+  - platform: binary
+    id: lights_2
+    name: Garage virtual switch 1
+    output: lights_2_output
+    disabled_by_default: true
+
+  - platform: binary
+    id: lights_3
+    name: Garage virtual switch 2
+    output: lights_3_output
+    disabled_by_default: true
+
+binary_sensor:
+  - id: !extend lights_1_sensor
+    on_press:
+      - light.toggle: lights_1
+
+  - id: !extend lights_2_sensor
+    name: Garage virtual switch 1
+
+  - id: !extend lights_3_sensor
+    name: Garage virtual switch 2

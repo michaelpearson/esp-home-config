@@ -1,0 +1,40 @@
+esphome:
+  name: ${device_name}
+
+bk72xx:
+  board: cb3s
+  framework:
+    version: dev
+
+status_led:
+  pin:
+    number: P22
+    inverted: true
+
+packages:
+  # WiFi + other basic components.
+  common: !include common.yaml
+  channel-1: !include
+    file: generic-input-output.yaml
+    vars:
+      id: ${channel_1_id}
+      relay_pin: P6
+      led_pin: P14
+      touch_pin: P24
+      inverted: false
+  channel-2: !include
+    file: generic-input-output.yaml
+    vars:
+      id: ${channel_2_id}
+      relay_pin: P8
+      led_pin: P26
+      touch_pin: P20
+      inverted: false
+  channel-3: !include
+    file: generic-input-output.yaml
+    vars:
+      id: ${channel_3_id}
+      relay_pin: P9
+      led_pin: P11
+      touch_pin: P7
+      inverted: false

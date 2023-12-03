@@ -1,0 +1,39 @@
+binary_sensor:
+  - platform: gpio
+    id: ${id}_sensor
+    pin: ${touch_pin}
+    filters:
+      - invert:
+    on_multi_click:
+      - timing:
+          - ON for at most 500ms
+          - OFF for at most 500ms
+          - ON for at most 500ms
+          - OFF for at most 500ms
+          - ON for at most 500ms
+          - OFF for at most 500ms
+          - ON for at most 500ms
+          - OFF for at most 500ms
+          - ON for at most 500ms
+          - OFF for at most 500ms
+          - ON for at most 500ms
+          - OFF for at most 500ms
+          - ON for at most 500ms
+          - OFF for at most 500ms
+        then:
+          - button.press: reboot
+
+output:
+  - platform: template
+    id: ${id}_output
+    inverted: ${inverted}
+    type: binary
+    write_action:
+      - lambda: "if (state) { id(${id}_relay).turn_on(); id(${id}_led).turn_on(); } else { id(${id}_relay).turn_off(); id(${id}_led).turn_off(); }"
+  - platform: gpio
+    pin: ${relay_pin}
+    id: ${id}_relay
+  - platform: gpio
+    pin: ${led_pin}
+    id: ${id}_led
+    inverted: true
