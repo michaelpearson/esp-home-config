@@ -26,9 +26,12 @@ class TuyaCover : public cover::Cover, public Component {
     bool _message_pending;
     int _message_size;
 
-    long _loop_time;
+    long _moving_at;
+    uint8_t _direction;
 
-    int _mcu_ready;
+    long _last_status_received;
+
+    int _dummy_connection_state;
 };
 
 }  // namespace tuya_cover

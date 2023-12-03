@@ -9,12 +9,7 @@ static const char *TAG = "tuya_cover.cover";
 using namespace esphome::cover;
 
 static const uint8_t STATUS[] = { 0x55, 0xaa, 0x00, 0x08, 0x00, 0x00, 0x07 };
-static const uint8_t HB[] = { 0x55, 0xaa, 0x00, 0x00, 0x00, 0x00, 0xff };
-
 static const uint8_t PAIRING_MODE_RESP[] = { 0x55, 0xaa, 0x00, 0x05, 0x00, 0x00, 0x04 };
-
-static const uint8_t QUERY_PRODUCT[] = { 0x55, 0xaa, 0x00, 0x01, 0x00, 0x00, 0x00 };
-static const uint8_t QUERY_WORKING_MODE[] = { 0x55, 0xaa, 0x00, 0x02, 0x00, 0x00, 0x01 };
 static const uint8_t WIFI_STATUS_1[] = { 0x55, 0xaa, 0x00, 0x03, 0x00, 0x01, 0x00, 0x03 };
 static const uint8_t WIFI_STATUS_3[] = { 0x55, 0xaa, 0x00, 0x03, 0x00, 0x01, 0x02, 0x05 };
 static const uint8_t WIFI_STATUS_4[] = { 0x55, 0xaa, 0x00, 0x03, 0x00, 0x01, 0x03, 0x06 };
@@ -26,20 +21,43 @@ void TuyaCover::setup(uart::UARTComponent * uart) {
 }
 
 void TuyaCover::loop() {
+  auto old_position = position;
+  auto old_direction = _direction;
+  auto old_operation = current_operation;
+
   handle_uart();
 
-  if (millis() < 15000) {
+  if (old_position != position) {
+    _moving_at = millis();
+  }
+
+  if (millis() - _moving_at > 1500) {
+    current_operation = COVER_OPERATION_IDLE;
+  } else {
+    current_operation = _direction ? COVER_OPERATION_CLOSING : COVER_OPERATION_OPENING;
+  }
+  if (old_position != position || old_direction != _direction || old_operation != current_operation) {
+    publish_state();
+  }
+
+  if (millis() < 10000) {
     return;
   }
 
-  if ((millis() - _loop_time) > 1000) {
-    _loop_time = millis();
+  if (_last_status_received == 0) {
+    return;
+  }
+
+  long period = millis() - _last_status_received;
+  if ((current_operation != COVER_OPERATION_IDLE && period > 200) || period > 1000) {
+    ESP_LOGI(TAG, "Requesting status");
     _uart->write_array(STATUS, 7);
+    _last_status_received = 0;
   }
 }
 
 void TuyaCover::handle_uart() {
-  // Wait 50ms before parsing a message.
+  // Wait 10ms before parsing a message.
   int len = _uart->available();
   if (len && !_message_pending) {
     _message_pending = true;
@@ -95,59 +113,45 @@ int TuyaCover::parse_message(uint8_t * message, int max_length) {
     return 6 + length;
   }
 
-  // Report wifi status
-  if (command == 0x03) {
-    //ESP_LOGI(TAG, "Wifi status response");
-    if (_mcu_ready == 0) {
-      _uart->write_array(WIFI_STATUS_3, 8);
-      _mcu_ready++;
-    }
-    if (_mcu_ready == 1) {
-      _uart->write_array(WIFI_STATUS_4, 8);
-      _mcu_ready++;
-    }
-    if (_mcu_ready == 2) {
-      _uart->write_array(WIFI_STATUS_5, 8);
-      _mcu_ready++;
-    }
-  }
-
-  // Enter pairing mode
+  // Handle WiFi connection process. The MCU expect each status response in sequence.
+  // MCU -> Module. Reset the WiFi connection.
   if (command == 0x05) {
-    //ESP_LOGI(TAG, "Enter pairing mode");
+    // Respond to MCU asking for WiFi reset.
     _uart->write_array(PAIRING_MODE_RESP, 7);
+
+    // Let the MCU know that we're in pairing mode.
     _uart->write_array(WIFI_STATUS_1, 8);
-    _mcu_ready = 0;
+    _dummy_connection_state = 0;
   }
 
-  // Status update
+  // Perform a sequence of pairing messages.
+  if (command == 0x03) {
+    if (_dummy_connection_state == 0) {
+      _uart->write_array(WIFI_STATUS_3, 8);
+      _dummy_connection_state++;
+    }
+    if (_dummy_connection_state == 1) {
+      _uart->write_array(WIFI_STATUS_4, 8);
+      _dummy_connection_state++;
+    }
+    if (_dummy_connection_state == 2) {
+      _uart->write_array(WIFI_STATUS_5, 8);
+      _dummy_connection_state = 0;
+    }
+  }
+
+  // Status update response.
   if (command == 0x07) {
-    auto dp_id = data[0];
-    auto dp_type = data[1];
-    auto dp_len = (data[2] << 8) | data[3];
-    auto dp_value = data + 4;
-
-    if (dp_id == 3 && dp_type == 2) {
-      position = ((dp_value[0] << 24) | (dp_value[1] << 16) | (dp_value[2] << 8) | dp_value[3]) / 100.0;
-      publish_state();
+    uint8_t dp_id = data[0];
+    uint8_t * dp_value = data + 4;
+    if (dp_id == 3) {
+      // Position is an integer between 0 - 100. The value is reported as an i32.
+      position = dp_value[3] / 100.0;
     }
-
-    if (dp_id == 0x01) {
-      switch(dp_value[0]) {
-        case 0x00:
-          current_operation = CoverOperation::COVER_OPERATION_CLOSING;
-          break;
-        case 0x01:
-          // ESP_LOGI(TAG, "Set idle");
-          current_operation = CoverOperation::COVER_OPERATION_IDLE;
-          break;
-        case 0x02:
-          current_operation = CoverOperation::COVER_OPERATION_OPENING;
-          break;
-      }
-      publish_state();
-      // ESP_LOGI(TAG, "DP 1: %d", dp_value[0]);
+    if (dp_id == 0x07) {
+      _direction = dp_value[0];
     }
+    _last_status_received = millis();
   }
   return 6 + length;
 }
@@ -179,16 +183,14 @@ cover::CoverTraits TuyaCover::get_traits() {
 }
 
 void TuyaCover::control(const cover::CoverCall &call) {
+  static uint8_t buffer[1024];
   if (call.get_stop()) {
     uint8_t data[] = { 0x01, 0x04, 0x00, 0x01, 0x01 }; 
-    uint8_t buffer[1024];
     uint8_t len = encode_message(buffer, 0x06, data, 5);
     _uart->write_array(buffer, len);
   } else if (call.get_position().has_value()) {
-    auto position = *call.get_position();
-    uint8_t percentage = (uint8_t)(position * 100);
+    uint8_t percentage = (uint8_t)(*call.get_position() * 100);
     uint8_t data[] = { 0x02, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, percentage }; 
-    uint8_t buffer[1024];
     uint8_t len = encode_message(buffer, 0x06, data, 8);
     _uart->write_array(buffer, len);
   }
