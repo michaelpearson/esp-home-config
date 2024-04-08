@@ -22,6 +22,7 @@ packages:
       led_pin: P6
       touch_pin: P24
       inverted: true
+      allow_other_uses: true
   channel-2: !include
     file: generic-input-output.yaml
     vars:
@@ -30,6 +31,7 @@ packages:
       led_pin: P8
       touch_pin: P20
       inverted: true
+      allow_other_uses: true
   channel-3: !include
     file: generic-input-output.yaml
     vars:
@@ -38,6 +40,7 @@ packages:
       led_pin: P9
       touch_pin: P7
       inverted: true
+      allow_other_uses: true
   channel-4: !include
     file: generic-input-output.yaml
     vars:
@@ -46,3 +49,4 @@ packages:
       led_pin: P26
       touch_pin: P14
       inverted: true
+      allow_other_uses: true

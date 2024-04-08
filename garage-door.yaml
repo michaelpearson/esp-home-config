@@ -48,3 +48,13 @@ cover:
   - platform: as5600_cover
     device_class: garage
     name: Garage door
+
+esp32_ble_tracker:
+
+sensor:
+  - platform: xiaomi_miscale
+    mac_address: '5C:64:F3:51:17:A0'
+    weight:
+      name: "Bathroom 1 weight"
+    impedance:
+      name: "Bathroom 1 weight impedance"

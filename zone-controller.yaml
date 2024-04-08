@@ -1,0 +1,109 @@
+substitutions:
+  friendly_name: "Zone controller"
+  name: "zone-controller"
+
+esphome:
+  name: "${name}"
+
+esp32:
+  board: esp32-s2-saola-1
+  framework:
+    type: arduino
+
+packages:
+  common: !include common/common.yaml
+
+output:
+  # Zone 1 (Media room)
+  - platform: gpio
+    pin: 9
+    id: zone_1_open
+  - platform: gpio
+    pin: 3
+    id: zone_1_close
+  # Zone 2 (Kitchen / Living)
+  - platform: gpio
+    pin: 11
+    id: zone_2_open
+  - platform: gpio
+    pin: 10
+    id: zone_2_close
+  # Zone 3 (Bedroom 2, 3 & 4)
+  - platform: gpio
+    pin: 13
+    id: zone_3_open
+  - platform: gpio
+    pin: 12
+    id: zone_3_close
+  # Zone 4 (Bedroom 1)
+  - platform: gpio
+    pin: 21
+    id: zone_4_open
+  - platform: gpio
+    pin: 14
+    id: zone_4_close
+
+switch:
+  # Zone 1 (Media room)
+  - platform: template
+    name: "Media room AC"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - output.turn_off: zone_1_close
+      - output.turn_on: zone_1_open
+      - delay: 0.05s
+      - output.turn_off: zone_1_open
+    turn_off_action:
+      - output.turn_off: zone_1_open
+      - output.turn_on: zone_1_close
+      - delay: 0.05s
+      - output.turn_off: zone_1_close
+
+  # Zone 2 (Kitchen / Living)
+  - platform: template
+    name: "Kitchen & Living AC"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - output.turn_off: zone_2_close
+      - output.turn_on: zone_2_open
+      - delay: 0.05s
+      - output.turn_off: zone_2_open
+    turn_off_action:
+      - output.turn_off: zone_2_open
+      - output.turn_on: zone_2_close
+      - delay: 0.05s
+      - output.turn_off: zone_2_close
+
+  # Zone 3 (Bedroom 2, 3 & 4)
+  - platform: template
+    name: "Bedroom 2, 3, & 4 AC"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - output.turn_off: zone_3_close
+      - output.turn_on: zone_3_open
+      - delay: 0.05s
+      - output.turn_off: zone_3_open
+    turn_off_action:
+      - output.turn_off: zone_3_open
+      - output.turn_on: zone_3_close
+      - delay: 0.05s
+      - output.turn_off: zone_3_close
+
+  # Zone 4 (Bedroom 1)
+  - platform: template
+    name: "Bedroom 1 AC"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - output.turn_off: zone_4_close
+      - output.turn_on: zone_4_open
+      - delay: 0.05s
+      - output.turn_off: zone_4_open
+    turn_off_action:
+      - output.turn_off: zone_4_open
+      - output.turn_on: zone_4_close
+      - delay: 0.05s
+      - output.turn_off: zone_4_close

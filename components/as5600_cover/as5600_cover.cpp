@@ -22,6 +22,9 @@ void AS5600Cover::loop() {
   long now = millis();
   raw_position = as5600.getCumulativePosition();
   position = (int)(raw_position / 261.000) / 100.0;
+  if (position < 0.05) {
+    position = 0;
+  }
 
   bool publish = false;
   auto delta = raw_position - previous_raw_position;
@@ -54,7 +57,9 @@ void AS5600Cover::loop() {
       ) {
         // Correct state.
         auto error = stop_at - position;
-        if (error < 0.05 && error > -0.05) {
+        if (stop_at == 1 || stop_at == 0) {
+          stop_at_timout = 0;
+        } else if (error < 0.05 && error > -0.05) {
           // Reached the endpoint.
           current_operation = COVER_OPERATION_IDLE;
           state_change_lockout_until = now + 2000;
@@ -111,6 +116,12 @@ void AS5600Cover::control(const cover::CoverCall &call) {
     stop_at_timout = millis() + 6000; // 6 seconds to stop.
   } else if (call.get_position().has_value()) {
     stop_at = *call.get_position();
+    if (stop_at > 0.9) {
+      stop_at = 1;
+    }
+    if (stop_at < 0.1) {
+      stop_at = 0;
+    }
     if (stop_at == 0 || stop_at == 1) {
       stop_at_timout = millis() + 6000; // 6 seconds to get to the correct state.
     } else {

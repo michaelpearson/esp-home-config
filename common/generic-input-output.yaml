@@ -1,3 +1,6 @@
+defaults:
+  allow_other_uses: "false"
+
 binary_sensor:
   - platform: gpio
     id: ${id}_sensor
@@ -31,9 +34,13 @@ output:
     write_action:
       - lambda: "if (state) { id(${id}_relay).turn_on(); id(${id}_led).turn_on(); } else { id(${id}_relay).turn_off(); id(${id}_led).turn_off(); }"
   - platform: gpio
-    pin: ${relay_pin}
+    pin: 
+      number: ${relay_pin}
+      allow_other_uses: ${allow_other_uses}
     id: ${id}_relay
   - platform: gpio
-    pin: ${led_pin}
+    pin: 
+      number: ${led_pin}
+      allow_other_uses: ${allow_other_uses}
     id: ${id}_led
     inverted: true
