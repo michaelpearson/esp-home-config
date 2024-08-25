@@ -46,7 +46,7 @@ logger:
 
 cover:
   - platform: as5600_cover
-    device_class: garage
+#    device_class: garage
     name: Garage door
 
 esp32_ble_tracker:
