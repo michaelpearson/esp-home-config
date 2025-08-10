@@ -1,0 +1,57 @@
+esphome:
+  name: bedroom-1-bed-lights
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+
+packages:
+  common: !include common/common.yaml
+
+api:
+  encryption:
+    key: "L/K/ntoeakCcFN6TB0SNwEBU0jnCA4DAuAsoQMOSDqk="
+
+status_led:
+  pin: GPIO3
+
+output:
+  - platform: ledc
+    pin: GPIO5
+    id: light_output_5
+  - platform: ledc
+    pin: GPIO4
+    id: light_output_4
+  - platform: ledc
+    pin: GPIO1
+    id: light_output_1
+  - platform: ledc
+    pin: GPIO0
+    id: light_output_0
+  - platform: ledc
+    pin: GPIO6
+    id: light_output_6
+  - platform: ledc
+    pin: GPIO7
+    id: light_output_7
+
+light:
+  - platform: monochromatic
+    name: "Light 5"
+    output: light_output_5
+  - platform: monochromatic
+    name: "Light 4"
+    output: light_output_4
+  - platform: monochromatic
+    name: "Light 1"
+    output: light_output_1
+  - platform: monochromatic
+    name: "Light 0"
+    output: light_output_0
+  - platform: monochromatic
+    name: "Light 6"
+    output: light_output_6
+  - platform: monochromatic
+    name: "Light 7"
+    output: light_output_7

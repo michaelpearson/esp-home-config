@@ -30,6 +30,7 @@ class AS5600Cover : public cover::Cover, public Component {
 
     State internal_state { State::STOPPED_CLOSING };
     AS5600 as5600;
+    long loopTime = 0;
     long last_movement_at = 0;
     long previous_raw_position = 0;
     long raw_position = 0;
@@ -39,8 +40,6 @@ class AS5600Cover : public cover::Cover, public Component {
 
     float stop_at = 0;
     long stop_at_timout = 0;
-
-    long last_debug = 0;
 };
 
 }  // namespace as5600_cover

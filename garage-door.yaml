@@ -9,7 +9,7 @@ external_components:
   - source: components
 
 esp32:
-  board: nodemcu-32s
+  board: esp32-c3-devkitm-1
   framework:
     type: arduino
 
@@ -19,17 +19,18 @@ api:
 
 ota:
   password: "8b43b192aa7dce0042bcf6bd5002f3bc"
+  platform: esphome
 
 packages:
   common: !include common/common.yaml
 
 status_led:
-  pin: 25
+  pin: 6
 
 output:
   - platform: gpio
     id: relay
-    pin: 33
+    pin: 7
 
 button:
   - platform: template
@@ -42,19 +43,24 @@ button:
         - output.turn_off: relay
 
 logger:
-  level: INFO
+  level: DEBUG
 
-cover:
-  - platform: as5600_cover
-#    device_class: garage
-    name: Garage door
+#cover:
+# - platform: as5600_cover
+#   name: Garage door
 
-esp32_ble_tracker:
+# esp32_ble_tracker:
 
 sensor:
-  - platform: xiaomi_miscale
-    mac_address: '5C:64:F3:51:17:A0'
-    weight:
-      name: "Bathroom 1 weight"
-    impedance:
-      name: "Bathroom 1 weight impedance"
+  # - platform: xiaomi_miscale
+  #   mac_address: '5C:64:F3:51:17:A0'
+  #   weight:
+  #     name: "Bathroom 1 weight"
+  #   impedance:
+  #     name: "Bathroom 1 weight impedance"
+  - platform: uptime
+    type: seconds
+    name: Uptime Sensor
+  - platform: wifi_signal
+    name: "WiFi Signal Sensor"
+    update_interval: 15s

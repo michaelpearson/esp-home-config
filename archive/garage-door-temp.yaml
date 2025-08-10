@@ -1,0 +1,44 @@
+substitutions:
+  friendly_name: "Garage door temp"
+  name: "garage-door-temp"
+
+esphome:
+  name: "${name}"
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino
+
+api:
+  encryption:
+    key: "YK17oHA9Wdfu4ou0vSMPUYwgMseHXHKNJOTieLub5S8="
+
+ota:
+  password: "8b43b192aa7dce0042bcf6bd5002f3bc"
+  platform: esphome
+
+packages:
+  common: !include common/common.yaml
+
+status_led:
+  pin: 2
+
+output:
+  - platform: gpio
+    id: relay
+    inverted: true
+    pin: 13
+
+button:
+  - platform: template
+    name: "${friendly_name} press button"
+    icon: "mdi:gate"
+    on_press:
+      then:
+        - output.turn_on: relay
+        - delay: 300ms
+        - output.turn_off: relay
+
+logger:
+  level: INFO

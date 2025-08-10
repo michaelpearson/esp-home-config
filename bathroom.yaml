@@ -1,0 +1,28 @@
+packages:
+  tuya: !include
+    file: common/tuya-2-gang.yaml
+    vars:
+      device_name: bathroom
+      channel_1_id: fan_1
+      channel_2_id: lights_1
+
+light:
+  - platform: binary
+    id: lights_1
+    name: Bathroom lights
+    output: lights_1_output
+
+fan:
+  - platform: binary
+    id: fan_1
+    name: Bathroom fan
+    output: fan_1_output
+
+binary_sensor:
+  - id: !extend lights_1_sensor
+    on_press:
+      - light.toggle: lights_1
+
+  - id: !extend fan_1_sensor
+    on_press:
+      - fan.toggle: fan_1

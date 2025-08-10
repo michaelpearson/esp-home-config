@@ -8,8 +8,11 @@ static const char *TAG = "as5600_cover.cover";
 
 using namespace esphome::cover;
 
+#define PIN_OUTPUT 7
+
 void AS5600Cover::setup() {
-  as5600.begin(18, 19);
+  Wire.begin(5, 4, 1000000L);
+  as5600.begin();
   if (!as5600.isConnected()) {
     ESP_LOGE(TAG, "Not connected");
   }
@@ -20,6 +23,12 @@ void AS5600Cover::setup() {
 
 void AS5600Cover::loop() {
   long now = millis();
+  if ((now - loopTime) < 100) {
+    // Limit the loop speed to 10hz
+    return;
+  }
+  loopTime = now;
+
   raw_position = as5600.getCumulativePosition();
   position = (int)(raw_position / 261.000) / 100.0;
   if (position < 0.05) {
@@ -34,7 +43,7 @@ void AS5600Cover::loop() {
     internal_state = delta > 0 ? OPENING : CLOSING;
     last_movement_at = now;
   } else {
-    if ((now - last_movement_at) > 500) {
+    if ((now - last_movement_at) > 1000) {
       if (internal_state == OPENING) {
         internal_state = STOPPED_OPENING;
       }
@@ -42,11 +51,6 @@ void AS5600Cover::loop() {
         internal_state = STOPPED_CLOSING;
       } 
     }
-  }
-
-  if (now - last_debug > 1000) {
-    last_debug = now;
-    ESP_LOGI(TAG, "published state %s, position %f, raw position %d", cover_operation_to_str(current_operation), position, raw_position);
   }
 
   if (now < stop_at_timout) {
@@ -57,7 +61,7 @@ void AS5600Cover::loop() {
       ) {
         // Correct state.
         auto error = stop_at - position;
-        if (stop_at == 1 || stop_at == 0) {
+        if (stop_at >= 0.95 || stop_at <= 0.05) {
           stop_at_timout = 0;
         } else if (error < 0.05 && error > -0.05) {
           // Reached the endpoint.
@@ -65,14 +69,14 @@ void AS5600Cover::loop() {
           state_change_lockout_until = now + 2000;
           stop_at_timout = 0;
           pin_reset_time = now + 200;
-          digitalWrite(33, HIGH);
+          digitalWrite(PIN_OUTPUT, HIGH);
           ESP_LOGI(TAG, "Reached the target with error %f", error);
         }
       } else {
         // Advance state.
         state_change_lockout_until = now + 2000;
         pin_reset_time = now + 200;
-        digitalWrite(33, HIGH);
+        digitalWrite(PIN_OUTPUT, HIGH);
       }
     }
   } else {
@@ -95,7 +99,7 @@ void AS5600Cover::loop() {
   }
 
   if (pin_reset_time > 0 && pin_reset_time < now) {
-    digitalWrite(33, LOW);
+    digitalWrite(PIN_OUTPUT, LOW);
     pin_reset_time = 0;
   }
 }
@@ -116,10 +120,10 @@ void AS5600Cover::control(const cover::CoverCall &call) {
     stop_at_timout = millis() + 6000; // 6 seconds to stop.
   } else if (call.get_position().has_value()) {
     stop_at = *call.get_position();
-    if (stop_at > 0.9) {
+    if (stop_at >= 0.95) {
       stop_at = 1;
     }
-    if (stop_at < 0.1) {
+    if (stop_at <= 0.05) {
       stop_at = 0;
     }
     if (stop_at == 0 || stop_at == 1) {

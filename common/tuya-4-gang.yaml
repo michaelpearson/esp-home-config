@@ -1,10 +1,11 @@
 esphome:
   name: ${device_name}
+  platformio_options:
+    lib_ignore:
+      - RPAsyncTCP
 
 bk72xx:
   board: cb3s
-  framework:
-    version: dev
 
 status_led:
   pin:

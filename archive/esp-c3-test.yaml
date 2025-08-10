@@ -1,0 +1,46 @@
+esphome:
+  name: esp-c3-test
+  friendly_name: esp-c3-test
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "pCUJa+N7g2ZtrMm1VQ99gDSNQOABV/q6WWSgLqPMxJA="
+
+ota:
+  - platform: esphome
+    password: "816859b2ae79232c8e8c7854b5d3adb5"
+
+status_led:
+  pin: 3
+
+packages:
+  common: !include common/common.yaml
+
+switch:
+  - platform: gpio
+    pin: 7
+    name: "IO1"
+  - platform: gpio
+    pin: 6
+    name: "IO2"
+  - platform: gpio
+    pin: 5
+    name: "IO3"
+  - platform: gpio
+    pin: 4
+    name: "IO4"
+  - platform: gpio
+    pin: 1
+    name: "IO5"
+  - platform: gpio
+    pin: 0
+    name: "IO6"
